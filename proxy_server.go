@@ -55,7 +55,7 @@ func (p *Proxy) proxy(w http.ResponseWriter, r *http.Request) {
 
 	if IsValidContent(res.Header.Get("Content-type")) {
 		// Replace old str to new str
-		data = bytes.Replace(data, []byte(p.oldStr), []byte(p.newStr), -1)
+		data = bytes.Replace(data, []byte(strings.ToLower(p.oldStr)), []byte(strings.ToLower(p.newStr)), -1)
 	}
 
 	//write response
