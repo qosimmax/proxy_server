@@ -1,12 +1,12 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"regexp"
 	"strings"
 )
 
@@ -53,10 +53,19 @@ func (p *Proxy) proxy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if IsValidContent(res.Header.Get("Content-type")) {
-		// Replace old str to new str
-		data = bytes.Replace(data, []byte(strings.ToLower(p.oldStr)), []byte(strings.ToLower(p.newStr)), -1)
+	if !IsValidContent(res.Header.Get("Content-type")) {
+		//write response
+		w.Write(data)
+		return
 	}
+
+	rp := regexp.MustCompile("[\\p{L}\\d_]+")
+	data = rp.ReplaceAllFunc(data, func(b []byte) []byte {
+		if string(b) == p.oldStr {
+			return []byte(p.newStr)
+		}
+		return b
+	})
 
 	//write response
 	w.Write(data)
@@ -79,7 +88,7 @@ func main() {
 	http.HandleFunc("/", proxy.proxy)
 	fmt.Println("Starting Server on", addr)
 	// start server and check for errors
-	err := http.ListenAndServe("localhost:3000", nil)
+	err := http.ListenAndServe(addr, nil)
 	if err != nil {
 		// fatal and log error
 		log.Fatal("Server could not started", err)
