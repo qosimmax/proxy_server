@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
 )
@@ -16,11 +18,11 @@ var CONTENT_TYPES = []string{"html", "text", "json", "xml"}
 //Proxy struct
 type Proxy struct {
 	targetURL string // target host url
-	oldStr    string // old str
-	newStr    string // new replace str
+	oldStr    []byte // old str
+	newStr    []byte // new replace str
 }
 
-// IsValidContent checks content type
+// IsValidContent function check the Content-Type header
 func IsValidContent(ctype string) bool {
 	for _, v := range CONTENT_TYPES {
 		if strings.Contains(ctype, v) {
@@ -32,7 +34,7 @@ func IsValidContent(ctype string) bool {
 
 // New function return Proxy instance
 func New(url, oldStr string, newStr string) *Proxy {
-	return &Proxy{url, oldStr, newStr}
+	return &Proxy{url, []byte(oldStr), []byte(newStr)}
 }
 
 // proxy handler
@@ -53,21 +55,24 @@ func (p *Proxy) proxy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// check the Content-Type header
 	if !IsValidContent(res.Header.Get("Content-type")) {
-		//write response
+		// write response
 		w.Write(data)
 		return
 	}
 
+	// replace old str to new str
+	// use a unicode character class to include the digits and underscore
 	rp := regexp.MustCompile("[\\p{L}\\d_]+")
 	data = rp.ReplaceAllFunc(data, func(b []byte) []byte {
-		if string(b) == p.oldStr {
-			return []byte(p.newStr)
+		if bytes.Equal(b, p.oldStr) {
+			return p.newStr
 		}
 		return b
 	})
 
-	//write response
+	// write response
 	w.Write(data)
 }
 
@@ -76,9 +81,14 @@ func main() {
 	host := flag.String("host", "habrahabr.ru", "target host")
 	oldStr := flag.String("old", "", "searching str")
 	newStr := flag.String("new", "", "new replacement str")
+
 	flag.Parse()
-	//formatting host url
+	//checking host url
 	*host = fmt.Sprintf("http://%v/", *host)
+	_, err := url.Parse(*host)
+	if err != nil {
+		log.Fatal("Error parsing URL")
+	}
 
 	// create proxy instance
 	proxy := New(*host, *oldStr, *newStr)
@@ -88,7 +98,7 @@ func main() {
 	http.HandleFunc("/", proxy.proxy)
 	fmt.Println("Starting Server on", addr)
 	// start server and check for errors
-	err := http.ListenAndServe(addr, nil)
+	err = http.ListenAndServe(addr, nil)
 	if err != nil {
 		// fatal and log error
 		log.Fatal("Server could not started", err)
