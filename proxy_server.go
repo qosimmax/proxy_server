@@ -17,7 +17,7 @@ var CONTENT_TYPES = []string{"html", "text", "json", "xml"}
 
 //Proxy struct
 type Proxy struct {
-	targetURL string // target host url
+	targetURL string // target host address
 	oldStr    []byte // old str
 	newStr    []byte // new replace str
 }
@@ -92,8 +92,8 @@ func main() {
 
 	// create proxy instance
 	proxy := New(*host, *oldStr, *newStr)
-	// proxy server address
-	addr := "localhost:3000"
+	// proxy server listen address
+	addr := ":3000"
 	// register url and handlerFunc called for "/" url
 	http.HandleFunc("/", proxy.proxy)
 	fmt.Println("Starting Server on", addr)
