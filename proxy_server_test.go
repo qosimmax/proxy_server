@@ -1,8 +1,7 @@
 package main
 
 import (
-	"log"
-	"net/http"
+	"bytes"
 	"testing"
 )
 
@@ -15,10 +14,33 @@ func TestContenType(t *testing.T) {
 
 }
 
-func ProxyTest(t *testing.T) {
-	res, err := http.Get("http://127.0.0.1:3000")
-	if err != nil {
-		t.Error(err)
+func ReplaceTest(t *testing.T) {
+	data := []byte("Hello world")
+	oldStr := []byte("world")
+	newStr := []byte("World")
+
+	olddata := data
+	Replace(&data, oldStr, newStr)
+	if bytes.Equal(olddata, data) {
+		t.Errorf("Error on Replace old:%v, new:%v", oldStr, newStr)
 	}
-	log.Println(res)
+
+}
+
+func DecodeZipTest(t *testing.T) {
+	data := []byte("Hello world")
+	_, err := DecodeZip(data)
+	if err != nil {
+		t.Error("Decode gzip data error")
+	}
+
+}
+
+func EncodeZipTest(t *testing.T) {
+	data := []byte("Hello world")
+	_, err := EncodeZip(data)
+	if err != nil {
+		t.Error("Encode data error")
+	}
+
 }
