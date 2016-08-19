@@ -57,13 +57,13 @@ func EncodeZipTest(t *testing.T) {
 
 }
 
-func TestHandler(t *testing.T) {
-	oldStr := "Go"
-	newStr := "Golang"
+func TestProxyHandler(t *testing.T) {
+	oldStr := "Москва"
+	newStr := "Moscow"
 
 	tr := &transport{http.DefaultTransport, oldStr, newStr}
 	c := &http.Client{Transport: tr}
-	resp, err := c.Get("http://habrahabr.ru")
+	resp, err := c.Get("https://geocode-maps.yandex.ru/1.x/?geocode=Москва,+Тверская+улица,+дом+7")
 	if err != nil {
 		t.Errorf("http request error:%v", err)
 		return
