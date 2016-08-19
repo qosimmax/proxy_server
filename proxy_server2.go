@@ -75,11 +75,15 @@ type transport struct {
 	newStr string
 }
 
+// RoundTripper
 func (t *transport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 	resp, err = t.RoundTripper.RoundTrip(req)
 	if err != nil {
 		return nil, err
 	}
+
+	// Close Body
+	defer resp.Body.Close()
 
 	// check the Content-Type header
 	if !IsValidContent(resp.Header.Get("Content-type")) {
@@ -89,13 +93,7 @@ func (t *transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 	//read response body
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
-	}
-
-	//close body
-	err = resp.Body.Close()
-	if err != nil {
-		return nil, err
+		return resp, nil
 	}
 
 	// check the Content-Encoding
@@ -104,7 +102,7 @@ func (t *transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		//decode gzip data
 		body, err = DecodeZip(body)
 		if err != nil {
-			return nil, err
+			return resp, nil
 		}
 		// Replace old str with new
 		Replace(&body, []byte(t.oldStr), []byte(t.newStr))
@@ -112,7 +110,7 @@ func (t *transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		// encode to gzip
 		body, err = EncodeZip(body)
 		if err != nil {
-			return nil, err
+			return resp, nil
 		}
 
 	default:
@@ -128,7 +126,7 @@ func (t *transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 	return resp, nil
 }
 
-// RerverseProxy object
+// Prox object
 type Prox struct {
 	// target url of reverse proxy
 	target *url.URL
