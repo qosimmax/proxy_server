@@ -11,7 +11,6 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"regexp"
-	"strconv"
 	"strings"
 )
 
@@ -102,7 +101,7 @@ func (t *transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 	// check the Content-Encoding
 	switch resp.Header.Get("Content-Encoding") {
 	case "gzip":
-		//decode gzip
+		//decode gzip data
 		body, err = DecodeZip(body)
 		if err != nil {
 			return nil, err
@@ -125,7 +124,6 @@ func (t *transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 	// set body and ContentLength
 	resp.Body = ioutil.NopCloser(bytes.NewReader(body))
 	resp.ContentLength = int64(len(body))
-	resp.Header.Set("Content-Length", strconv.Itoa(len(body)))
 
 	return resp, nil
 }
@@ -152,14 +150,13 @@ func (p *Prox) handle(w http.ResponseWriter, r *http.Request) {
 func main() {
 	// constants
 	const (
-		Port          = ":3000"
-		defaultTarget = "geocode-maps.yandex.ru/1.x/?geocode=Москва,+Тверская+улица,+дом+7"
-		//defaultTarget      = "habrahabr.ru"
+		Port               = ":3000"
+		defaultTarget      = "habrahabr.ru"
 		defaultTargetUsage = "default redirect url, '127.0.0.1:8080'"
-		defaultOldStr      = "Hi"
-		defaultOldStrUsage = "default value, 'Hi'"
-		defaultNewStr      = "Hello"
-		defaultNewStrUsage = "default new replacer value, 'Hello'"
+		defaultOldStr      = "Go"
+		defaultOldStrUsage = "default value, 'Go'"
+		defaultNewStr      = "Golang"
+		defaultNewStrUsage = "default new replacer value, 'Golang'"
 	)
 
 	// flags
