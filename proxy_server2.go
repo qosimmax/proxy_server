@@ -137,8 +137,7 @@ type Prox struct {
 }
 
 // New function create instance of Prox
-func New(target string) *Prox {
-	url, _ := url.Parse(target)
+func New(url *url.URL) *Prox {
 	return &Prox{target: url, proxy: httputil.NewSingleHostReverseProxy(url)}
 }
 
@@ -167,7 +166,7 @@ func main() {
 
 	//checking host url
 	*host = fmt.Sprintf("https://%v/", *host)
-	_, err := url.Parse(*host)
+	url, err := url.Parse(*host)
 	if err != nil {
 		log.Fatal("Error parsing URL")
 	}
@@ -175,7 +174,7 @@ func main() {
 	fmt.Println("server listen on:", Port)
 	fmt.Println("redirecting to:", *host)
 	// proxy instance
-	proxy := New(*host)
+	proxy := New(url)
 	proxy.proxy.Transport = &transport{http.DefaultTransport, *oldStr, *newStr}
 	http.HandleFunc("/", proxy.handle)
 	// start proxy server
