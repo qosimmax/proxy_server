@@ -83,7 +83,7 @@ func (t *transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		return nil, err
 	}
 
-	// Close Body
+	// close Body
 	defer resp.Body.Close()
 
 	// check the Content-Type header
@@ -163,8 +163,8 @@ func main() {
 	newStr := flag.String("new", defaultNewStr, defaultNewStrUsage)
 	flag.Parse()
 
-	//checking host url
 	*host = fmt.Sprintf("https://%v/", *host)
+	// url parse
 	url, err := url.Parse(*host)
 	if err != nil {
 		log.Fatal("Error parsing URL")
