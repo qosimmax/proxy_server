@@ -18,6 +18,7 @@ import (
 var CONTENT_TYPES = []string{"html", "text", "json", "xml"}
 
 // regexp Compile
+// use a unicode character class to include the digits and underscore
 var RP = regexp.MustCompile("[\\p{L}\\d_]+")
 
 // IsValidContent function check the Content-Type header
@@ -30,9 +31,8 @@ func IsValidContent(ctype string) bool {
 	return false
 }
 
-// replace old str to new str
+// Replace old str to new str
 func Replace(data *[]byte, oldStr []byte, newStr []byte) {
-	// use a unicode character class to include the digits and underscore
 	*data = RP.ReplaceAllFunc(*data, func(b []byte) []byte {
 		if bytes.Equal(b, oldStr) {
 			return newStr
@@ -52,7 +52,7 @@ func DecodeZip(b []byte) (z []byte, err error) {
 	return
 }
 
-// gzip data
+// Encode to gzip
 func EncodeZip(b []byte) (z []byte, err error) {
 	var bz bytes.Buffer
 	gz := gzip.NewWriter(&bz)
@@ -69,6 +69,7 @@ func EncodeZip(b []byte) (z []byte, err error) {
 	return
 }
 
+// Transport object
 type transport struct {
 	http.RoundTripper
 	oldStr string
@@ -93,7 +94,7 @@ func (t *transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 	//read response body
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return resp, nil
+		return resp, err
 	}
 
 	// check the Content-Encoding
@@ -102,7 +103,7 @@ func (t *transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		//decode gzip data
 		body, err = DecodeZip(body)
 		if err != nil {
-			return resp, nil
+			return resp, err
 		}
 		// Replace old str with new
 		Replace(&body, []byte(t.oldStr), []byte(t.newStr))
@@ -110,7 +111,7 @@ func (t *transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		// encode to gzip
 		body, err = EncodeZip(body)
 		if err != nil {
-			return resp, nil
+			return resp, err
 		}
 
 	default:
